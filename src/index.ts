@@ -90,7 +90,7 @@ async function Fetch(url: string): Promise<Response> {
     });
 }
 
-const proxyUrl = 'https://bitcoinexplorer.org/api';
+const proxyToURL = 'https://bitcoinexplorer.org/api';
 const port = 80;
 
 
@@ -99,12 +99,16 @@ Bun.serve({
     port,
     lowMemoryMode: true,
     async fetch(request: Request, server: Server) {
-        const url = new URL(new URL(request.url).pathname, proxyUrl).toString();
+        const proxyURL = new URL(request.url);
+
+        const url = new URL(proxyURL.pathname, proxyToURL);
+        for (const [key, value] of proxyURL.searchParams) url.searchParams.set(key, value);
+
         if (request.method === "OPTIONS") return new Response(null, { headers: NoCorsHeaders });
 
 
         if (request.method === "GET") {
-            try { return await Fetch(url); }
+            try { return await Fetch(url.toString()); }
 
             catch (error) {
                 console.error("Proxy error:", error);
